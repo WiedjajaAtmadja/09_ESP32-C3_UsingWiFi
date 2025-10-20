@@ -7,6 +7,16 @@
 
 WiFiUDP udp;
 NTPClient timeClient(udp, 7*3600); // UTC+7
+// Teleplot target (change IP if needed)
+const char* teleplotIP = "10.143.73.42";  
+const int teleplotPort = 47269; // default Teleplot UDP port
+
+void sendToTeleplot(const char* label, float value) {
+  udp.beginPacket(teleplotIP, teleplotPort);
+  udp.printf("%s:%f\n", label, value);
+  udp.endPacket();
+}
+
 void connectToWiFi();
 
 void setup() {
@@ -26,6 +36,7 @@ void loop() {
     Serial.print("Current time: ");
     Serial.print(timeClient.getFormattedTime());
     Serial.println();
+    sendToTeleplot("CurrentTime", timeClient.getEpochTime());
   }
   ArduinoOTA.handle();
 }

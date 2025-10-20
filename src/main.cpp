@@ -43,7 +43,7 @@ void setup() {
   timeClient.begin();
   ArduinoOTA.setHostname("esp32_iot8");
   ArduinoOTA.begin();
-  ticker1Second.attach(1.0, OneSecondTicker);
+  ticker1Second.attach(3.0, OneSecondTicker);
   mqttConnect();
 }
 

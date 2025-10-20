@@ -29,12 +29,10 @@ void sendToTeleplot(const char* label, float value) {
 
 void connectToWiFi();
 boolean mqttConnect();
+void mqttPublishMessage(const char* msg);
 void OneSecondTicker() {
     timeClient.update();
-    // Serial.print("Current time: ");
-    // Serial.print(timeClient.getFormattedTime());
-    // Serial.println();
-    // sendToTeleplot("CurrentTime", timeClient.getEpochTime());
+    mqttPublishMessage(timeClient.getFormattedTime().c_str());
 }
 
 void setup() {
@@ -52,6 +50,11 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   mqtt.loop();
+}
+
+void mqttPublishMessage(const char* msg)
+{
+  mqtt.publish(MQTT_TOPIC_PUBLISH, msg);
 }
 
 void mqttCallback(char* topic, byte* payload, unsigned int len) {

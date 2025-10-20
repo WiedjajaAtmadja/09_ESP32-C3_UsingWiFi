@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
+#include <ArduinoOTA.h>
 #include "wifi_id.h"
 
 WiFiUDP udp;
@@ -12,20 +13,28 @@ void setup() {
   Serial.begin(115200);
   connectToWiFi();
   timeClient.begin();
+  ArduinoOTA.setHostname("esp32_iot8");
+  ArduinoOTA.begin();
 }
 
+unsigned long previousMillis = 0;
 void loop() {
-  timeClient.update();
-  Serial.print("Current time: ");
-  Serial.print(timeClient.getFormattedTime());
-  Serial.println();
-  delay(1000);
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= 1000) {
+    previousMillis = currentMillis;
+    timeClient.update();
+    Serial.print("Current time: ");
+    Serial.print(timeClient.getFormattedTime());
+    Serial.println();
+  }
+  ArduinoOTA.handle();
 }
 
 void connectToWiFi()
 {
+  WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.println("Connecting to WiFi...");
+  Serial.printf("Connecting to WiFi %s ...\r\n", WIFI_SSID);
   while (WiFi.status() != WL_CONNECTED)
   {
     Serial.print(".");

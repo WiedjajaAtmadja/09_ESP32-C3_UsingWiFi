@@ -59,8 +59,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int len) {
   Serial.print(topic);
   Serial.print("]: ");
   Serial.write(payload, len);
-  // digitalWrite(12, payload[0]-'0');
-  // digitalWrite(13, payload[1]-'0');
+  digitalWrite(12, payload[0]-'0');
+  digitalWrite(13, payload[1]-'0');
 
   Serial.println();
 }

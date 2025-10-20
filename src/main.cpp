@@ -3,8 +3,10 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 #include <ArduinoOTA.h>
+#include <Ticker.h>
 #include "wifi_id.h"
 
+Ticker ticker1Second;
 WiFiUDP udp;
 NTPClient timeClient(udp, 7*3600); // UTC+7
 // Teleplot target (change IP if needed)
@@ -18,6 +20,13 @@ void sendToTeleplot(const char* label, float value) {
 }
 
 void connectToWiFi();
+void OneSecondTicker() {
+    timeClient.update();
+    Serial.print("Current time: ");
+    Serial.print(timeClient.getFormattedTime());
+    Serial.println();
+    sendToTeleplot("CurrentTime", timeClient.getEpochTime());
+}
 
 void setup() {
   Serial.begin(115200);
@@ -25,19 +34,10 @@ void setup() {
   timeClient.begin();
   ArduinoOTA.setHostname("esp32_iot8");
   ArduinoOTA.begin();
+  ticker1Second.attach(1.0, OneSecondTicker);
 }
 
-unsigned long previousMillis = 0;
 void loop() {
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= 1000) {
-    previousMillis = currentMillis;
-    timeClient.update();
-    Serial.print("Current time: ");
-    Serial.print(timeClient.getFormattedTime());
-    Serial.println();
-    sendToTeleplot("CurrentTime", timeClient.getEpochTime());
-  }
   ArduinoOTA.handle();
 }
 

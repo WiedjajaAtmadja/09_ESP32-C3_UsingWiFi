@@ -27,14 +27,33 @@ void sendToTeleplot(const char* label, float value) {
   udp.endPacket();
 }
 
+const char* wifiStatusToString(wl_status_t status) {
+  switch (status) {
+    case WL_IDLE_STATUS:
+      return "IDLE_STATUS";
+    case WL_NO_SSID_AVAIL:
+      return "NO_SSID_AVAILABLE";
+    case WL_SCAN_COMPLETED:
+      return "SCAN_COMPLETED";
+    case WL_CONNECTED:
+      return "CONNECTED";
+    case WL_CONNECT_FAILED:
+      return "CONNECT_FAILED";
+    case WL_CONNECTION_LOST:
+      return "CONNECTION_LOST";
+    case WL_DISCONNECTED:
+      return "DISCONNECTED";
+    default:
+      return "UNKNOWN";
+  }
+}
+
 void connectToWiFi();
 boolean mqttConnect();
+void mqttPublishMessage(const char* msg);
 void OneSecondTicker() {
     timeClient.update();
-    // Serial.print("Current time: ");
-    // Serial.print(timeClient.getFormattedTime());
-    // Serial.println();
-    // sendToTeleplot("CurrentTime", timeClient.getEpochTime());
+    mqttPublishMessage(timeClient.getFormattedTime().c_str());
 }
 
 void setup() {
@@ -45,13 +64,18 @@ void setup() {
   timeClient.begin();
   ArduinoOTA.setHostname("esp32_iot8");
   ArduinoOTA.begin();
-  ticker1Second.attach(1.0, OneSecondTicker);
+  ticker1Second.attach(3.0, OneSecondTicker);
   mqttConnect();
 }
 
 void loop() {
   ArduinoOTA.handle();
   mqtt.loop();
+}
+
+void mqttPublishMessage(const char* msg)
+{
+  mqtt.publish(MQTT_TOPIC_PUBLISH, msg);
 }
 
 void mqttCallback(char* topic, byte* payload, unsigned int len) {
@@ -97,11 +121,17 @@ void connectToWiFi()
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.printf("Connecting to WiFi %s ...\r\n", WIFI_SSID);
-  while (WiFi.status() != WL_CONNECTED)
+  wl_status_t status;
+  do 
   {
-    Serial.print(".");
-    delay(500);
-  }
+    status =  WiFi.status();
+    Serial.print("WiFi Status: ");
+    Serial.print(wifiStatusToString(status));
+    Serial.print(" (");
+    Serial.print(status);
+    Serial.println(")");
+    delay(1000);
+  } while (status != WL_CONNECTED);
   Serial.println("Connected to WiFi network");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());

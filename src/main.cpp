@@ -5,6 +5,7 @@
 #include <ArduinoOTA.h>
 #include <Ticker.h>
 #include <PubSubClient.h>
+#include <WiFiManager.h>
 #include "wifi_id.h"
 
 #define MQTT_BROKER  "broker.emqx.io"
@@ -56,11 +57,34 @@ void OneSecondTicker() {
     mqttPublishMessage(timeClient.getFormattedTime().c_str());
 }
 
+void connectUsingWifiManager()
+{
+  pinMode(8, INPUT_PULLUP);
+  digitalWrite(8, HIGH); // enable pullup resistor
+  WiFiManager wm;
+  
+  Serial.printf(" Pin 8 state: %d \n", digitalRead(8) );
+  if (digitalRead(8) == LOW )
+    wm.resetSettings();
+
+  bool res = wm.autoConnect("ESP32-C3-Steff","steff123"); // password protected ap
+
+  if(!res) {
+      Serial.println("Failed to connect");
+      // ESP.restart();
+  } 
+  else {
+      //if you get here you have connected to the WiFi    
+      Serial.println("connected...yeey :)");
+  }  
+}
+
 void setup() {
   pinMode(12, OUTPUT);
   pinMode(13, OUTPUT);
   Serial.begin(115200);
-  connectToWiFi();
+  connectUsingWifiManager();
+  // connectToWiFi();
   timeClient.begin();
   ArduinoOTA.setHostname("esp32_iot8");
   ArduinoOTA.begin();
